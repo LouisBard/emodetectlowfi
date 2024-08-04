@@ -111,6 +111,9 @@ cv2.ocl.setUseOpenCL(False)
 # dictionary which assigns each label an emotion (alphabetical order)
 emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fearful", 3: "Happy", 4: "Neutral", 5: "Sad", 6: "Surprised"}
 
+# Sharpening kernel
+sharpen_kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
+
 # start the webcam feed
 cap = cv2.VideoCapture(0)
 while True:
@@ -135,6 +138,12 @@ while True:
         cv2.putText(frame, emotion, (x+20, y-60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
     frame = apply_style(frame, style_image)
+
+    # Convert frame to uint8
+    frame = (frame * 255).astype(np.uint8)
+
+    # Apply sharpening
+    frame = cv2.filter2D(frame, -1, sharpen_kernel)
 
     # Resize and display
     cv2.imshow('Video', cv2.resize(frame,(1024,768),interpolation = cv2.INTER_LANCZOS4))
