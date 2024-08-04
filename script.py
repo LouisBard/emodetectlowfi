@@ -10,6 +10,8 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import MaxPooling2D
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import os
+import glob
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Enable Metal plugin
@@ -41,26 +43,32 @@ def apply_style(content_image, style_image):
 
 # Define paths for style images
 style_images = {
-    'Happy': r'./images/happy.jpg',
-    'Sad': r'./images/sad.jpg',
-    'Angry': r'./images/angry.jpeg',
-    'Surprised': r'./images/surprised.jpeg',
-    'Fearful': r'./images/fear.jpeg',
-    'Disgusted': r'./images/disgusted.jpg',
-    'Neutral': r'./images/disgusted.jpg'
+    'Happy': './images/happy',
+    'Sad': './images/sad',
+    'Angry': './images/angry',
+    'Surprised': './images/surprised',
+    'Fearful': './images/fear',
+    'Disgusted': './images/disgusted',
+    'Neutral': './images/happy'
 }
 
-default_style_image_path = r'./images/angry.jpeg'
+default_style_image_path = './images/angry'
 
 def load_and_preprocess_img(path):
     try:
-        if path is None or not os.path.exists(path):
-            print(f"Invalid path or file not found: {path}")
-            path = default_style_image_path
+        # Find the file regardless of extension
+        files = glob.glob(f"{path}.*")
+        if not files:
+            print(f"No file found for: {path}")
+            files = glob.glob(f"{default_style_image_path}.*")
 
-        img = cv2.imread(path)
+        if not files:
+            raise ValueError(f"No default image found at: {default_style_image_path}")
+
+        img_path = files[0]
+        img = cv2.imread(img_path)
         if img is None:
-            raise ValueError(f"Error loading image: {path}")
+            raise ValueError(f"Error loading image: {img_path}")
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = tf.convert_to_tensor(img, dtype=tf.float32)
@@ -126,11 +134,10 @@ while True:
         style_image = preloaded_style_images[emotion]
         cv2.putText(frame, emotion, (x+20, y-60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
-    # Apply style transfer
-    stylized_frame = apply_style(frame, style_image)
+    frame = apply_style(frame, style_image)
 
     # Resize and display
-    cv2.imshow('Video', cv2.resize(stylized_frame,(1600,960),interpolation = cv2.INTER_CUBIC))
+    cv2.imshow('Video', cv2.resize(frame,(800,600),interpolation = cv2.INTER_CUBIC))
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
