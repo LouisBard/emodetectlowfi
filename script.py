@@ -72,7 +72,7 @@ def load_and_preprocess_img(path):
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = tf.convert_to_tensor(img, dtype=tf.float32)
-        img = tf.image.resize(img, (256, 256))
+        img = tf.image.resize(img, (128, 128))
         img = img / 255.0  # Normalize the image
 
         return img
@@ -137,7 +137,7 @@ while True:
     frame = apply_style(frame, style_image)
 
     # Resize and display
-    cv2.imshow('Video', cv2.resize(frame,(800,600),interpolation = cv2.INTER_CUBIC))
+    cv2.imshow('Video', cv2.resize(frame,(1024,768),interpolation = cv2.INTER_LANCZOS4))
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
