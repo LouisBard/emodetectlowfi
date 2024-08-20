@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 595 842">
+  <defs>
+    <radialGradient id="bg-gradient" cx="50%" cy="50%" r="70%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:#ff9ff3;stop-opacity:0.7" />
+      <stop offset="25%" style="stop-color:#feca57;stop-opacity:0.7" />
+      <stop offset="50%" style="stop-color:#54a0ff;stop-opacity:0.7" />
+      <stop offset="75%" style="stop-color:#5f27cd;stop-opacity:0.7" />
+      <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:0.7" />
+    </radialGradient>
+    <filter id="textShadow">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-color="#ffffff" flood-opacity="0.7"/>
+    </filter>
+  </defs>
+  
+  <rect width="595" height="842" fill="url(#bg-gradient)"/>
+  <rect width="595" height="842" fill="white" opacity="0.3"/>
+  
+  <!-- Title and Subtitle -->
+  <text x="297.5" y="50" font-family="Helvetica, Arial, sans-serif" font-size="32" text-anchor="middle" fill="#333333" font-weight="bold" filter="url(#textShadow)">The Spectrum of Emotion</text>
+  <text x="297.5" y="85" font-family="Helvetica, Arial, sans-serif" font-size="22" text-anchor="middle" fill="#333333" font-style="italic" filter="url(#textShadow)">How Colors Shape Our Feelings</text>
+  
+  <!-- Emotion Wheel with Improved Typography -->
+  <g transform="translate(297.5, 300)">
+    <!-- Full circle background -->
+    <circle cx="0" cy="0" r="150" fill="none" stroke="#333333" stroke-width="2"/>
+    
+    <!-- Emotion segments -->
+    <path d="M0 0 L150 0 A150 150 0 0 1 75 129.9038 Z" fill="#FFD700"/>
+    <path d="M0 0 L75 129.9038 A150 150 0 0 1 -75 129.9038 Z" fill="#4169E1"/>
+    <path d="M0 0 L-75 129.9038 A150 150 0 0 1 -150 0 Z" fill="#800080"/>
+    <path d="M0 0 L-150 0 A150 150 0 0 1 -75 -129.9038 Z" fill="#008000"/>
+    <path d="M0 0 L-75 -129.9038 A150 150 0 0 1 75 -129.9038 Z" fill="#FF0000"/>
+    <path d="M0 0 L75 -129.9038 A150 150 0 0 1 150 0 Z" fill="#FFA500"/>
+    
+    <!-- Improved Emotion labels -->
+    <text x="100" y="-25" font-family="Helvetica, Arial, sans-serif" font-size="18" text-anchor="middle" fill="#000000" font-weight="bold" filter="url(#textShadow)">JOY</text>
+    <text x="0" y="110" font-family="Helvetica, Arial, sans-serif" font-size="18" text-anchor="middle" fill="#000000" font-weight="bold" filter="url(#textShadow)">SADNESS</text>
+    <text x="-100" y="25" font-family="Helvetica, Arial, sans-serif" font-size="18" text-anchor="middle" fill="#000000" font-weight="bold" filter="url(#textShadow)">FEAR</text>
+    <text x="-100" y="-25" font-family="Helvetica, Arial, sans-serif" font-size="18" text-anchor="middle" fill="#000000" font-weight="bold" filter="url(#textShadow)">DISGUST</text>
+    <text x="0" y="-110" font-family="Helvetica, Arial, sans-serif" font-size="18" text-anchor="middle" fill="#000000" font-weight="bold" filter="url(#textShadow)">ANGER</text>
+    <text x="100" y="25" font-family="Helvetica, Arial, sans-serif" font-size="18" text-anchor="middle" fill="#000000" font-weight="bold" filter="url(#textShadow)">SURPRISE</text>
+  </g>
+  
+  <!-- Color Psychology Explanation -->
+  <rect x="30" y="500" width="535" height="220" fill="rgba(255,255,255,0.8)" rx="15" ry="15" stroke="#333333" stroke-width="2"/>
+  <text x="50" y="530" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#333333" font-weight="bold" filter="url(#textShadow)">Color Psychology Insights:</text>
+  <text x="50" y="560" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#333333" filter="url(#textShadow)">
+    <tspan x="50" dy="0">• Yellow (Joy): Stimulates mental activity and generates muscle energy</tspan>
+    <tspan x="50" dy="25">• Blue (Sadness): Calms the mind and aids in concentration</tspan>
+    <tspan x="50" dy="25">• Purple (Fear): Associated with royalty, luxury, and spiritual awareness</tspan>
+    <tspan x="50" dy="25">• Green (Disgust): Balances emotions and promotes harmony and refreshment</tspan>
+    <tspan x="50" dy="25">• Red (Anger): Increases heart rate and creates urgency</tspan>
+    <tspan x="50" dy="25">• Orange (Surprise): Enhances social interaction and boosts confidence</tspan>
+  </text>
+  
+  <!-- Interactive Installation Concept -->
+  <rect x="30" y="740" width="535" height="80" fill="rgba(255,255,255,0.8)" rx="15" ry="15" stroke="#333333" stroke-width="2"/>
+  <text x="297.5" y="770" font-family="Helvetica, Arial, sans-serif" font-size="18" text-anchor="middle" fill="#333333" font-weight="bold" filter="url(#textShadow)">Interactive Emotion-Color Experience</text>
+  <text x="297.5" y="800" font-family="Helvetica, Arial, sans-serif" font-size="14" text-anchor="middle" fill="#333333" filter="url(#textShadow)">Immerse yourself in a color-changing environment that responds to collective emotions</text>
+  
+  <!-- Footer -->
+  <text x="570" y="830" font-family="Helvetica, Arial, sans-serif" font-size="12" text-anchor="end" fill="#333333" font-style="italic" filter="url(#textShadow)">© 2024 Emotion-Color Psychology Project</text>
+</svg>
