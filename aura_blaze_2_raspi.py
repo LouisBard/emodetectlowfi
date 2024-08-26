@@ -7,7 +7,7 @@ import time
 import mediapipe as mp
 
 # Load TensorFlow Lite model for emotion recognition
-emotion_interpreter = tf.lite.Interpreter(model_path='model_optimized.tflite')
+emotion_interpreter = Interpreter(model_path='model_optimized.tflite')
 emotion_interpreter.allocate_tensors()
 emotion_input_details = emotion_interpreter.get_input_details()
 emotion_output_details = emotion_interpreter.get_output_details()
