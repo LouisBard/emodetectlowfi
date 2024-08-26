@@ -317,9 +317,11 @@ def main():
         else:
             cv2.putText(frame, "No face detected", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-        frame_resized = cv2.resize(frame, (projector_width, projector_height), interpolation=cv2.INTER_AREA)
+  #      frame_resized = cv2.resize(frame, (projector_width, projector_height), interpolation=cv2.INTER_AREA)
+
         
-        cv2.imshow('Emotion Detection', frame_resized)
+  #      cv2.imshow('Emotion Detection', frame_resized)
+        cv2.imshow('Emotion Detection', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
