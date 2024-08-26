@@ -2,3 +2,4 @@ numpy==1.24
 opencv-python==4.10.0.84
 tflite-runtime==2.14.0
 mediapipe==0.10.14
+pillow==10.4.0
