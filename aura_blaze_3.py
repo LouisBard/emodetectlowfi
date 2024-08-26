@@ -1,22 +1,27 @@
 import numpy as np
 import cv2
-from tflite_runtime.interpreter import Interpreter
+import tensorflow as tf
+from tensorflow.lite.python.interpreter import Interpreter
 from collections import deque
 import time
 import mediapipe as mp
-from PIL import Image
+import logging
 
-# Load TensorFlow Lite model for emotion recognition
-emotion_interpreter = Interpreter(model_path='model_optimized.tflite')
+# Configuration du logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# Chargement du modèle TensorFlow Lite pour la reconnaissance des émotions
+emotion_interpreter = tf.lite.Interpreter(model_path='model_optimized.tflite')
 emotion_interpreter.allocate_tensors()
 emotion_input_details = emotion_interpreter.get_input_details()
 emotion_output_details = emotion_interpreter.get_output_details()
 
-# Initialize MediaPipe Face Detection
+# Initialisation de MediaPipe Face Detection
 mp_face_detection = mp.solutions.face_detection
 face_detection = mp_face_detection.FaceDetection(min_detection_confidence=0.3, model_selection=1)
 
-# Emotion dictionary and colors
+# Dictionnaire des émotions et couleurs
 emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fearful", 3: "Happy", 4: "Neutral", 5: "Sad", 6: "Surprised"}
 emotion_colors = {
     "Angry": (0, 0, 255),
@@ -37,10 +42,10 @@ class SmoothingFilter:
     def update(self, new_value):
         self.values.append(new_value)
         avg_value = np.mean(self.values, axis=0)
-        if isinstance(new_value, np.ndarray):  # For colors (NumPy arrays)
+        if isinstance(new_value, np.ndarray):
             if np.any(np.abs(new_value - avg_value) > self.threshold):
                 return avg_value
-        else:  # For scalar values
+        else:
             if abs(new_value - avg_value) > self.threshold:
                 return avg_value
         return new_value
@@ -57,22 +62,17 @@ class Person:
     def update(self, emotions, x, y, w, h, current_time):
         self.last_seen = current_time
         
-        # Smooth emotions
         smoothed_emotions = {emotion: self.emotion_filters[emotion].update(value) 
                              for emotion, value in emotions.items()}
         
-        # Calculate dominant emotion
         dominant_emotion = max(smoothed_emotions, key=smoothed_emotions.get)
         
-        # Smooth decorum value
         decorum_value = calculate_decorum(smoothed_emotions)
         smooth_decorum = self.decorum_filter.update(decorum_value)
         
-        # Smooth aura color
         raw_color = np.array(emotion_colors[dominant_emotion])
         smooth_color = self.aura_color_filter.update(raw_color)
         
-        # Smooth position and size
         smooth_x = self.position_filter.update(x)
         smooth_y = self.position_filter.update(y)
         smooth_w = self.size_filter.update(w)
@@ -100,27 +100,13 @@ def calculate_decorum(emotions):
         "Disgusted": -2, "Fearful": -2, "Neutral": 0
     }
     decorum_score = sum(weights[emotion] * (probability / 100) for emotion, probability in emotions.items())
-    return (decorum_score + 3) / 6 * 10  # Normalize to 0-10 scale
+    return (decorum_score + 3) / 6 * 10
 
+@tf.function
 def process_face(face):
-    target_size = (emotion_input_details[0]['shape'][1], emotion_input_details[0]['shape'][2])
-    
-    # Convertir l'image en tableau numpy si ce n'est pas déjà le cas
-    if not isinstance(face, np.ndarray):
-        face = np.array(face)
-    
-    # Redimensionner l'image
-    face_pil = Image.fromarray(face)
-    face_pil = face_pil.resize(target_size)
-    
-    # Convertir en tableau numpy et normaliser
-    face_array = np.array(face_pil)
-    face_array = face_array.astype(np.float32) / 255.0
-    
-    # Ajouter une dimension pour le batch
-    face_array = np.expand_dims(face_array, axis=0)
-    
-    return face_array
+    face = tf.image.resize(face, (emotion_input_details[0]['shape'][1], emotion_input_details[0]['shape'][2]))
+    face = tf.expand_dims(face, axis=0) / 255.0
+    return face
 
 def generate_simplified_emotion_aura(frame, center, color, radius, time_factor):
     height, width = frame.shape[:2]
@@ -189,15 +175,27 @@ def detect_faces(frame):
             faces.append((x, y, w, h))
     return faces
 
+
+def find_closest_person(people, x, y, max_distance=50):
+    closest_id = None
+    min_dist = float('inf')
+    for pid, person in people.items():
+        px, py, _, _ = person.position_filter.values[-1] if person.position_filter.values else (0, 0, 0, 0)
+        dist = ((px - x) ** 2 + (py - y) ** 2) ** 0.5
+        if dist < min_dist and dist <= max_distance:
+            closest_id = pid
+            min_dist = dist
+    return closest_id if closest_id is not None else f"{x}_{y}"
+
 def display_compact_stylized_ed_badge(frame, x, y, w, h, score):
     badge_width, badge_height = 60, 30
-    badge_x, badge_y = x + w + 5, y
+    badge_x, badge_y = int(x + w + 5), int(y)  # Assurez-vous que les coordonnées sont des entiers
 
     frame_height, frame_width = frame.shape[:2]
     if badge_x + badge_width > frame_width:
-        badge_x = x - badge_width - 5
+        badge_x = int(x - badge_width - 5)
     if badge_y + badge_height > frame_height:
-        badge_y = y + h - badge_height
+        badge_y = int(y + h - badge_height)
 
     base_color = (0, 200, 0) if score >= 7 else (0, 200, 200) if score >= 4 else (0, 0, 200)
 
@@ -228,45 +226,47 @@ def process_faces(frame, faces, people, current_time):
         
         try:
             processed_face = process_face(face_img)
-            emotion_interpreter.set_tensor(emotion_input_details[0]['index'], processed_face)
+            emotion_interpreter.set_tensor(emotion_input_details[0]['index'], processed_face.numpy())
             emotion_interpreter.invoke()
             emotion_probs = emotion_interpreter.get_tensor(emotion_output_details[0]['index'])[0]
             emotions = {emotion_dict[i]: prob * 100 for i, prob in enumerate(emotion_probs)}
+            
+            logger.debug(f"Processing face at ({x}, {y}), size: {w}x{h}")
+            logger.debug(f"Detected emotions: {emotions}")
+            
+            person_id = find_closest_person(people, x, y)
+            if person_id not in people:
+                people[person_id] = Person()
+            
+            person = people[person_id]
+            update_result = person.update(emotions, x, y, w, h, current_time)
+            
+            if isinstance(update_result, tuple) and len(update_result) == 5:
+                smoothed_emotions, dominant_emotion, smooth_decorum, smooth_color, smooth_position = update_result
+            else:
+                logger.error(f"Unexpected update result for person {person_id}: {update_result}")
+                continue
+            
+            logger.debug(f"Person ID: {person_id}, Dominant emotion: {dominant_emotion}")
+            
+            # Utilisez smooth_position pour l'affichage
+            sx, sy, sw, sh = smooth_position
+            
+            # Générer l'aura et afficher le badge pour ce visage spécifique
+            center = (int(sx + sw // 2), int(sy + sh // 2))
+            frame = generate_simplified_emotion_aura(frame, center, smooth_color, max(sw, sh) * 1.1, current_time % 2)
+            frame = display_compact_stylized_ed_badge(frame, sx, sy, sw, sh, smooth_decorum)
+            
             all_emotions.append(emotions)
+            active_ids.add(person_id)
         except Exception as e:
-            print(f"Error processing face at ({x}, {y}): {str(e)}")
+            logger.error(f"Error processing face at ({x}, {y}): {str(e)}")
             continue
-        
-        # Find or create person
-        person_id = find_closest_person(people, x, y)
-        if person_id not in people:
-            people[person_id] = Person()
-        
-        person = people[person_id]
-        (smoothed_emotions, dominant_emotion, smooth_decorum, 
-         smooth_color, _) = person.update(emotions, x, y, w, h, current_time)
-        
-        # Generate aura and display E.D. badge using exact values
-        center = (int(x + w // 2), int(y + h // 2))
-        frame = generate_simplified_emotion_aura(frame, center, smooth_color, max(w, h) * 1.1, current_time % 2)
-        frame = display_compact_stylized_ed_badge(frame, x, y, w, h, smooth_decorum)
-        
-        active_ids.add(person_id)
 
-    # Remove inactive people
+    # Supprimer les personnes inactives
     people = {pid: person for pid, person in people.items() if current_time - person.last_seen < 1.0}
 
     return frame, all_emotions, people
-
-def find_closest_person(people, x, y, max_distance=50):
-    closest_id = min(people.keys(), key=lambda pid: distance(pid, x, y), default=None)
-    if closest_id and distance(closest_id, x, y) <= max_distance:
-        return closest_id
-    return f"{x}_{y}"
-
-def distance(person_id, x, y):
-    px, py = map(int, person_id.split('_'))
-    return ((px - x) ** 2 + (py - y) ** 2) ** 0.5
 
 def get_projector_resolution():
     screen = cv2.getWindowImageRect("Emotion Detection")
@@ -277,12 +277,12 @@ def get_projector_resolution():
 def main():
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
-        print("Error: Unable to open webcam.")
+        logger.error("Unable to open webcam.")
         return
 
     cv2.namedWindow("Emotion Detection", cv2.WINDOW_NORMAL)
     projector_width, projector_height = get_projector_resolution()
-    print(f"Projector resolution: {projector_width}x{projector_height}")
+    logger.info(f"Projector resolution: {projector_width}x{projector_height}")
     cv2.setWindowProperty("Emotion Detection", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
     people = {}
@@ -295,14 +295,14 @@ def main():
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("Error: Unable to read webcam frame.")
+            logger.error("Unable to read webcam frame.")
             break
 
         frame_count += 1
         current_time = time.time()
         if current_time - last_fps_time >= 1:
             fps = frame_count / (current_time - last_fps_time)
-            print(f"FPS: {fps:.2f}")
+            logger.info(f"FPS: {fps:.2f}")
             frame_count = 0
             last_fps_time = current_time
 
