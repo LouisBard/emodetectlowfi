@@ -1,0 +1,16 @@
+[Unit]
+Description=Boot art page for an exhibition for instance
+After=multi-user.target
+
+[Service]
+Type=idle
+User=pi
+WorkingDirectory=/home/pi
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/pi/.Xauthority
+ExecStartPre=cd helth/emodetectlowfi
+ExecStart=python aura_blaze_2_raspi.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
