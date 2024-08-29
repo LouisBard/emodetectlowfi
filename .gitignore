@@ -1,1 +1,8 @@
 .DS_Store
+video_test.mp4
+test_opt.py
+test_camera.py
+profile_process_faces.py
+./old
+profile_script.py
+requirements.txt

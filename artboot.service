@@ -9,7 +9,7 @@ WorkingDirectory=/home/pi
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/pi/.Xauthority
 ExecStartPre=cd helth/emodetectlowfi
-ExecStart=python aura_blaze_2_raspi.py
+ExecStart=python emolow_aura_background_raspi.py
 Restart=on-failure
 
 [Install]

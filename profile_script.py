@@ -1,6 +1,6 @@
 import cProfile
 import pstats
-from aura_deep_face import main
+from aura_blaze_2_opt_vid import main
 
 # Exécuter le profilage
 cProfile.run('main()', 'output.prof')
